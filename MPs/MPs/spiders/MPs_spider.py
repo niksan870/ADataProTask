@@ -56,7 +56,7 @@ class PostsSpider(scrapy.Spider):
                '"Bills":' + json.dumps(dictBills, ensure_ascii=False) + '' \
             '}'
 
-            # Write json files in the litter dir
+            # Write json files in the litter dir if there is no such dir, create one
             with open(dir_path+'/../litter/'+ dictProfile['FirstName'] +'-'+ dictProfile['FamilyName'] + '.json', 'w') as f:
                 f.write(json_filled)
 
