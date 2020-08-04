@@ -8,6 +8,7 @@ from scrapy import Selector
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+# I am using the pattern option since the native options format:email AND format:date seem to not working
 schema = {
     "type": "object",
     "properties": {
@@ -36,14 +37,18 @@ class PostsSpider(scrapy.Spider):
         sel = Selector(response, type='xml')
         xmlProfile = sel.xpath("//Profile")
         if len(xmlProfile) > 0:
+            # Get the additional fields
             dictParliamentaryActivity = self.returnDictFromXmlString(sel.xpath("//ParliamentaryActivity").get())
             dictParliamentaryControl = self.returnDictFromXmlString(sel.xpath("//ParliamentaryControl").get())
             dictBills = self.returnDictFromXmlString(sel.xpath("//Bills").get())
             strProfile = self.parseProfile(xmlProfile)
 
             dictProfile = json.loads(strProfile)
+
+            # Validate profile summary
             validate(instance=dictProfile, schema=schema)
 
+            # Construct the json
             json_filled = '{' \
                '"Profile":' + json.dumps(dictProfile, ensure_ascii=False) + ',' \
                '"ParliamentaryActivity":' + json.dumps(dictParliamentaryActivity, ensure_ascii=False) + ',' \
@@ -51,6 +56,7 @@ class PostsSpider(scrapy.Spider):
                '"Bills":' + json.dumps(dictBills, ensure_ascii=False) + '' \
             '}'
 
+            # Write json files in the litter dir
             with open(dir_path+'/../litter/'+ dictProfile['FirstName'] +'-'+ dictProfile['FamilyName'] + '.json', 'w') as f:
                 f.write(json_filled)
 
@@ -67,6 +73,7 @@ class PostsSpider(scrapy.Spider):
 
 
     def parseProfile(self, xmlProfile):
+        # Parsing the XML
         firstName = xmlProfile.xpath("//Names/FirstName/@value").get()
         familyName = xmlProfile.xpath("//Names/FamilyName/@value").get()
         email = xmlProfile.xpath("//E-mail/@value").get()
@@ -79,6 +86,7 @@ class PostsSpider(scrapy.Spider):
         rm = spl_string[:-1]
         parsedPoliticalForce = ' '.join([str(elem) for elem in rm])
 
+        # Construction profile json
         return '{' \
                '"FirstName":"' + firstName + '",' \
                 '"FamilyName":"' + familyName + '",' \
